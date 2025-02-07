@@ -1,5 +1,6 @@
 import os
 
+
 def get_lma_data_dir():
     """_summary_
     Get's the directory where LMA data is stored.
@@ -11,6 +12,7 @@ def get_lma_data_dir():
     abs_path = os.path.abspath(lma_directory)
 
     return abs_path
+
 
 def get_lma_out_dir():
     """_summary_
