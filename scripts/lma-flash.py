@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Use lmatools to sort LMA ASCII data into flashes
 Create gridded imagery from those flashes.
@@ -230,8 +230,7 @@ def grid(
 # ===========================================================
 #      ================ MAIN SCRIPT ===================
 # ===========================================================
-if __name__ == "__main__":
-
+def main():
     network = sys.argv[1]
     year = sys.argv[2]
     month = sys.argv[3]
@@ -300,6 +299,6 @@ if __name__ == "__main__":
             base_date=datetime(2012, 1, 1),
         )
 
-    # ===========================================================
-    #      ================ ============ ===================
-    # ===========================================================
+
+if __name__ == "__main__":
+    main()

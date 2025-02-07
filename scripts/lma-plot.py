@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Plots gridded 3D source products produced by LMA_flash_sort_and_grid.py
 USAGE:
@@ -695,57 +696,61 @@ def make_plot(
 # ----------------------- MAIN SCRIPT -----------------------
 # ===========================================================
 
-# ---------- Assign Date Variables from User Input ----------
-network = sys.argv[1]
-year = sys.argv[2]
-month = sys.argv[3]
-day = sys.argv[4]
 
-# --------------- Declair IO Directories --------------------
-out_dir = get_lma_out_dir()
-grid_dir = f"{out_dir}{network}/grid_files/"
-plot_dir = f"{out_dir}{network}/maps/"
+def main():
+    # ---------- Assign Date Variables from User Input ----------
+    network = sys.argv[1]
+    year = sys.argv[2]
+    month = sys.argv[3]
+    day = sys.argv[4]
 
-# --------------- User input parameters --------------------
-params = {"lon_index": (0, 800), "lat_index": (0, 800), "alt_index": (0, 20)}  # km
+    # --------------- Declair IO Directories --------------------
+    out_dir = get_lma_out_dir()
+    grid_dir = f"{out_dir}{network}/grid_files/"
+    plot_dir = f"{out_dir}{network}/maps/"
 
-# ---------- Create Directory for Output Files --------------
-date = f"{year}/{month}/{day}/"
-outpath = f"{plot_dir}{date}"
-if os.path.exists(outpath) == False:
-    os.makedirs(outpath)
-    subprocess.call(
-        ["chmod", "a+w", outpath, plot_dir + year + "/" + month, plot_dir + year]
-    )
+    # --------------- User input parameters --------------------
+    params = {"lon_index": (0, 800), "lat_index": (0, 800), "alt_index": (0, 20)}  # km
 
-# ------------- Get List of 3D Gridded Files ----------------
-filepaths = glob.glob(f"{grid_dir}{date}*source_3d.nc")
+    # ---------- Create Directory for Output Files --------------
+    date = f"{year}/{month}/{day}/"
+    outpath = f"{plot_dir}{date}"
+    if os.path.exists(outpath) == False:
+        os.makedirs(outpath)
+        subprocess.call(
+            ["chmod", "a+w", outpath, plot_dir + year + "/" + month, plot_dir + year]
+        )
 
-# -----------------------------------------------------------
-# -------------- Generate and Save the Plots ----------------
-print(f"grid_dir = {grid_dir}")
-print(f"plot_dir = {plot_dir}")
-print("Cycle through 3D gridded files.....")
+    # ------------- Get List of 3D Gridded Files ----------------
+    filepaths = glob.glob(f"{grid_dir}{date}*source_3d.nc")
 
-for file in filepaths:
-    # ------------ Get Data from Gridded NetCDF Files ------------
-    print(file)
-    data = get_data(
-        file,
-        lon_index=params["lon_index"],
-        lat_index=params["lat_index"],
-        alt_index=params["alt_index"],
-    )
-    # --------------------- Generate Figure ---------------------
-    make_plot(
-        data,
-        file,
-        grid_name="src_density",
-        network=network,
-        outpath=outpath,
-        do_save=True,
-        theme="norm",
-        image_type="png",
-    )
+    # -----------------------------------------------------------
+    # -------------- Generate and Save the Plots ----------------
+    print(f"grid_dir = {grid_dir}")
+    print(f"plot_dir = {plot_dir}")
+    print("Cycle through 3D gridded files.....")
 
-# ===============================================================
+    for file in filepaths:
+        # ------------ Get Data from Gridded NetCDF Files ------------
+        print(file)
+        data = get_data(
+            file,
+            lon_index=params["lon_index"],
+            lat_index=params["lat_index"],
+            alt_index=params["alt_index"],
+        )
+        # --------------------- Generate Figure ---------------------
+        make_plot(
+            data,
+            file,
+            grid_name="src_density",
+            network=network,
+            outpath=outpath,
+            do_save=True,
+            theme="norm",
+            image_type="png",
+        )
+
+
+if __name__ == "__main__":
+    main()
