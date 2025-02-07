@@ -47,8 +47,11 @@ def draw_map(ax, network='DCLMA',
 
     #--add features, such as lakes, river, borders, coastlines, etc.
     reader = shpreader.Reader('countyl010g.shp')
+    print("\tCreated Reader...")
+
     counties = list(reader.geometries())
     COUNTIES = cfeature.ShapelyFeature(counties, projection)
+
 
     ax.add_feature(cfeature.LAND, color=continentrgba)
     ax.add_feature(COUNTIES, facecolor='none', edgecolor=countiesrgba)
@@ -57,6 +60,8 @@ def draw_map(ax, network='DCLMA',
     ax.add_feature(cfeature.OCEAN, color=plotrgba)
     ax.coastlines(resolution='10m', color=coastrgba)
 
+    print("\tAdded Features...")
+
     # offset=3.8
     # extent=[lon_0-offset,lon_0+offset,lat_0-offset, lat_0+offset]
     extent400km = {
@@ -64,19 +69,26 @@ def draw_map(ax, network='DCLMA',
         'MALMA' : [-80.6803, -71.4599, 34.8194, 42.0002],
         'WFFLMA' : [-79.9485, -70.7802, 34.4132, 41.5943]
     }
-    ax.set_extent(extent400km[network], projection)
+    ax.set_extent(extent400km[network], crs=projection)
+    print("\tSet Extent...")
     ax.set_aspect('auto')
+
+    print("\tSet Aspect...")
 
     # -------------- Gather network specific variables  --------------
     lma_info = info(network)
     station_lats = lma_info[2]
     station_lons = lma_info[3]
 
+    print("\tGot Info...")
+
     # ------------------- Plot LMA Stations -------------------
     ax.scatter(station_lons, station_lats, s=6, marker='s',
               color=stationrgba, facecolors='none',
               transform=projection, zorder=10)
 
+    print("\tDone Generate Map...")
+    
     return ax
 
 def round_time(dt, round_to=60):
@@ -269,7 +281,7 @@ def make_plot(data,file,
 
     map.pcolormesh(data['mesh_lon'], data['mesh_lat'], data['lmalonlat'].T[:-1,:-1],
                   transform=ccrs.PlateCarree(), edgecolor=meshrgba,
-                  cmap=cmap, vmax=vmax, norm=norm,
+                  cmap=cmap, norm=norm,
                   shading='flat', zorder=10)
 
     # ===============================================================
@@ -289,7 +301,7 @@ def make_plot(data,file,
                           xscale='linear', yscale='linear')
     plot_xz = ax1.pcolormesh(mesh_xzx,mesh_xzz/1e3,data['lmalon'].T[:-1,:-1],
                              edgecolor=meshrgba,
-                             cmap=cmap, vmax=vmax, norm=norm,
+                             cmap=cmap, norm=norm,
                              shading='flat', zorder=10)
     #plot_xz.cmap.set_over('w')
 
@@ -311,7 +323,7 @@ def make_plot(data,file,
     # --------------- Add subplot Axis and Plot --------------------
     plot_zy = ax2.pcolormesh(mesh_zyz/1e3,mesh_zyy,data['lmalat'][:-1,:-1],
                              edgecolor=meshrgba,
-                             cmap=cmap, vmax=vmax, norm=norm,
+                             cmap=cmap, norm=norm,
                              shading='flat', zorder=10)
     #plot_zy.cmap.set_over('w')
 
@@ -446,17 +458,17 @@ def make_plot(data,file,
         tick.set_fontname('PT Sans')
 
     # -------------- Turn plot gridlines on ---------------------
-    ax0.grid(b=True,which='both',axis='both',
+    ax0.grid(visible=True,which='both',axis='both',
             linestyle='-',linewidth=1,color=gridrgba,
             alpha=gridrgba[3])
 
-    ax1.grid(b=True,which='both',axis='both',
+    ax1.grid(visible=True,which='both',axis='both',
             linestyle='-',linewidth=1,color=gridrgba,
             alpha=gridrgba[3])
-    ax2.grid(b=True,which='both',axis='both',
+    ax2.grid(visible=True,which='both',axis='both',
             linestyle='-',linewidth=1,color=gridrgba,
             alpha=gridrgba[3])
-    ax3.grid(b=True,which='both',axis='y',
+    ax3.grid(visible=True,which='both',axis='y',
             linestyle='-',linewidth=1,color=gridrgba,
             alpha=gridrgba[3])
 
@@ -496,7 +508,7 @@ month = sys.argv[3]
 day   = sys.argv[4]
 
 # --------------- Declair IO Directories --------------------
-base_dir = '/data_lightning/www/lma_data/'
+base_dir = './data_lightning/www/lma_data/'
 grid_dir = f'{base_dir}{network}/grid_files/'
 plot_dir = f'{base_dir}{network}/maps/'
 

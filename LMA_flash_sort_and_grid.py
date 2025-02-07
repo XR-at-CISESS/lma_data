@@ -97,7 +97,8 @@ def sort_flashes(files, base_sort_dir, params):
 
                 # ===========================================================
                 # *********** Create LMADataset and Cluster Data ************
-                lmadata = LMADataset(a_file,file_mask_length=params['mask_length'])
+                # lmadata = LMADataset(a_file,file_mask_length=params['mask_length']) (mask length param doesn't exist anymore)
+                lmadata = LMADataset(a_file)
                 clusterer(lmadata)
 
                 # ----------- create filename with .h5 extention ------------
@@ -202,10 +203,11 @@ if __name__ == '__main__':
     Data files should be stored in directories by /data/year/month/day/
     '''
     for day in sorted(days):
-        data_out = f'/data_lightning/www/lma_data/{network}'
+        data_out = f'./data_lightning/www/lma_data/{network}'
         rootdir = f'{data_out}/data/{year}/{month}/{day}/'
         filenames = glob.glob(rootdir + '*.gz')
-
+        print("Root Dir: " + rootdir)
+        print("Filenames: " + str(filenames))
         lma_info = info(network)
         params = {'stations':(6,99),          # range of allowable numbers of contributing stations
                   'chi2':(0,5),               # range of allowable chi-sq values
