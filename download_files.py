@@ -1,8 +1,10 @@
 from subprocess import call
 import os, sys
+from LMA_util import get_lma_data_dir
 
 def download_day(network, year, month, days = []):
-    path = f'/data_lightning/www/lma_data/{network}/data/{year}/{month}'
+    data_dir = get_lma_data_dir()
+    path = os.path.join(data_dir, f'{network}/data/{year}/{month}')
 
     for day in sorted(days):
 

@@ -30,6 +30,7 @@ from lmatools.flashsort.gen_sklearn import DBSCANFlashSorter
 
 from lmatools.grid.make_grids import grid_h5flashfiles, dlonlat_at_grid_center, write_cf_netcdf_latlon, write_cf_netcdf_3d_latlon
 from six.moves import map
+from LMA_util import get_lma_data_dir, get_lma_out_dir
 
 import logging, logging.handlers
 
@@ -211,8 +212,10 @@ if __name__ == '__main__':
     start_time = sys.argv[5]
     end_time = sys.argv[6]
 
-    data_out = '/data_lightning/www/lma_data/' + network
-    filenames = glob.glob(data_out + '/' + 'data/' + year +'/'+ month
+    data_dir = get_lma_data_dir()
+    out_dir = get_lma_out_dir()
+    data_out = os.path.join(data_dir, network)
+    filenames = glob.glob(out_dir + '/' + 'data/' + year +'/'+ month
                           + '/' + day + '/' + '*.gz')
 
     # ---- Define storm length and calculate frame interval -------
@@ -263,7 +266,7 @@ if __name__ == '__main__':
             continue
 
     if end_time < start_time:
-        filenames = glob.glob('/data_lightning/www/lma_data/' + network + '/' + 'data/' + year +'/'+ month +'/'+ str(int(day)+1) +'/' +'*.gz')
+        filenames = glob.glob(data_dir + network + '/' + 'data/' + year +'/'+ month +'/'+ str(int(day)+1) +'/' +'*.gz')
         for file in filenames:
             fname = os.path.basename(file)
             f_time = int(float((fname.split('_')[2])))

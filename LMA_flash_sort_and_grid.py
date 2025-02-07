@@ -25,6 +25,7 @@ from six.moves import map
 import logging, logging.handlers
 
 from LMA_info import info
+from LMA_util import get_lma_out_dir
 
 def tfromfile(name):
     parts = name.split('_')
@@ -203,7 +204,8 @@ if __name__ == '__main__':
     Data files should be stored in directories by /data/year/month/day/
     '''
     for day in sorted(days):
-        data_out = f'./data_lightning/www/lma_data/{network}'
+        out_dir = get_lma_out_dir()
+        data_out = os.path.join(out_dir, network)
         rootdir = f'{data_out}/data/{year}/{month}/{day}/'
         filenames = glob.glob(rootdir + '*.gz')
         print("Root Dir: " + rootdir)

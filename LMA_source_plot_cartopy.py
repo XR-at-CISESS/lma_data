@@ -24,6 +24,8 @@ import cartopy.io.shapereader as shpreader
 from cartopy.mpl.geoaxes import GeoAxes
 
 from LMA_info import info
+from LMA_util import get_lma_data_dir, get_lma_out_dir
+
 GeoAxes._pcolormesh_patched = Axes.pcolormesh
 
 def draw_map(ax, network='DCLMA',
@@ -508,9 +510,9 @@ month = sys.argv[3]
 day   = sys.argv[4]
 
 # --------------- Declair IO Directories --------------------
-base_dir = './data_lightning/www/lma_data/'
-grid_dir = f'{base_dir}{network}/grid_files/'
-plot_dir = f'{base_dir}{network}/maps/'
+out_dir = get_lma_out_dir()
+grid_dir = f'{out_dir}{network}/grid_files/'
+plot_dir = f'{out_dir}{network}/maps/'
 
 # --------------- User input parameters --------------------
 params = {'lon_index':(0,800),
