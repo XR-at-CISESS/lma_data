@@ -4,7 +4,12 @@ setup(
     name="lma_data",
     description="Scripts to transform and produce plots of LMA data",
     version="1.0",
-    scripts=["lma-download", "lma-flash", "lma-plot", "lma-storm"],
+    scripts=[
+        "scripts/lma-download.py",
+        "scripts/lma-flash.py",
+        "scripts/lma-plot.py",
+        "scripts/lma-storm.py",
+    ],
     packages=find_packages(),
     install_requires=[
         "scikit-learn",
