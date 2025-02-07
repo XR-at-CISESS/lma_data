@@ -21,5 +21,6 @@ setup(
         "numpy",
         "scipy",
         "shapely",
+        "lmatools"
     ],
 )
