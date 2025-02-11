@@ -698,6 +698,10 @@ def make_plot(
 
 
 def main():
+    if len(sys.argv) < 4:
+        print("Usage: lma_plot <network> <year> <month> (days)")
+        exit(1)
+
     # ---------- Assign Date Variables from User Input ----------
     network = sys.argv[1]
     year = sys.argv[2]

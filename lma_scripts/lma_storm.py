@@ -244,6 +244,10 @@ def grid(
 
 
 def main():
+    if len(sys.argv) < 7:
+        print("Usage: lma_storm <network> <year> <month> <day> <start_time> <end_time>")
+        exit(1)
+
     # ---- Assign Directory/File Paths from User Input -------
     network = sys.argv[1]
     year = sys.argv[2]

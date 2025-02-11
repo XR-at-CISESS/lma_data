@@ -23,6 +23,10 @@ def download_day(network, year, month, days=[]):
 
 
 def main():
+    if len(sys.argv) < 4:
+        print("Usage: lma_download <network> <year> <month> [days]")
+        exit(1)
+
     network = sys.argv[1]
     year = sys.argv[2]
     month = sys.argv[3]
