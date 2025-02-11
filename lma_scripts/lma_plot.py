@@ -487,7 +487,8 @@ def make_plot(
         + " UTC",
         x=0.5,
         y=0.98,
-        fontdict=dict(family="PT Sans", size=12),
+        fontdict=dict(family="PT Sans"),
+        fontsize=12,
         color=textrgba,
         alpha=textrgba[3],
     )
