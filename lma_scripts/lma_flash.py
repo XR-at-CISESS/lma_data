@@ -231,7 +231,7 @@ def grid(
 # ===========================================================
 def main():
     if len(sys.argv) < 4:
-        print("Usage: lma_flash <network> <year> <month> (days)")
+        print("Usage: lma_flash <network> <year> <month> [days]")
         exit(1)
 
     network = sys.argv[1]
