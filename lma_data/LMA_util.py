@@ -25,3 +25,15 @@ def get_lma_out_dir():
     abs_path = os.path.abspath(lma_directory)
 
     return abs_path
+
+def get_lma_shapes_dir():
+    """_summary_
+    Get's the directory where transformed LMA data is written to.
+
+    Returns:
+        str: The absolute path of the LMA directory.
+    """
+    shapes_directory = os.environ.get("LMA_SHAPES_DIR", ".")
+    abs_path = os.path.abspath(shapes_directory)
+
+    return abs_path

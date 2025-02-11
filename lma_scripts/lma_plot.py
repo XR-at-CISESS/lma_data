@@ -24,7 +24,7 @@ import cartopy.io.shapereader as shpreader
 from cartopy.mpl.geoaxes import GeoAxes
 
 from lma_data.LMA_info import info
-from lma_data.LMA_util import get_lma_data_dir, get_lma_out_dir
+from lma_data.LMA_util import get_lma_shapes_dir, get_lma_out_dir
 
 GeoAxes._pcolormesh_patched = Axes.pcolormesh
 
@@ -54,7 +54,7 @@ def draw_map(
     )
 
     # --add features, such as lakes, river, borders, coastlines, etc.
-    reader = shpreader.Reader("countyl010g.shp")
+    reader = shpreader.Reader(os.path.join(get_lma_shapes_dir(), "countyl010g.shp"))
     print("\tCreated Reader...")
 
     counties = list(reader.geometries())
