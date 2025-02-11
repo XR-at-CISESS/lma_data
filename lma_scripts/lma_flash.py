@@ -29,7 +29,7 @@ from six.moves import map
 import logging, logging.handlers
 
 from lma_data.LMA_info import info
-from lma_data.LMA_util import get_lma_out_dir
+from lma_data.LMA_util import get_lma_data_dir, get_lma_out_dir
 
 
 def tfromfile(name):
@@ -245,6 +245,8 @@ def main():
 
     Data files should be stored in directories by /data/year/month/day/
     """
+
+    data_dir = get_lma_data_dir()
     out_dir = get_lma_out_dir()
     data_out = os.path.join(out_dir, network)
 
@@ -252,7 +254,7 @@ def main():
     pathlib.Path(data_out).mkdir(parents=True, exist_ok=True)
 
     for day in sorted(days):
-        rootdir = f"{data_out}/data/{year}/{month}/{day}/"
+        rootdir = f"{data_dir}/data/{year}/{month}/{day}/"
         filenames = glob.glob(rootdir + "*.gz")
         print("Root Dir: " + rootdir)
         print("Filenames: " + str(filenames))

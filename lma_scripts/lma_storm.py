@@ -257,13 +257,13 @@ def main():
 
     data_dir = get_lma_data_dir()
     out_dir = get_lma_out_dir()
-    data_out = os.path.join(data_dir, network)
+    data_out = os.path.join(out_dir, network)
 
     # Ensure data out directory exists
     pathlib.Path(data_out).mkdir(parents=True, exist_ok=True)
 
     filenames = glob.glob(
-        out_dir + "/" + "data/" + year + "/" + month + "/" + day + "/" + "*.gz"
+        data_dir + "/" + "data/" + year + "/" + month + "/" + day + "/" + "*.gz"
     )
 
     # ---- Define storm length and calculate frame interval -------
