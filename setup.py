@@ -6,10 +6,10 @@ setup(
     version="1.0",
     entry_points={
         "console_scripts": [
-            "lma_download=scripts.lma_download:main",
-            "lma_flash=scripts.lma_flash:main",
-            "lma_plot=scripts.lma_plot:main",
-            "lma_storm=scripts.lma_storm:main"
+            "lma_download=lma_scripts.lma_download:main",
+            "lma_flash=lma_scripts.lma_flash:main",
+            "lma_plot=lma_scripts.lma_plot:main",
+            "lma_storm=lma_scripts.lma_storm:main"
         ]
     },
     packages=find_packages(),
