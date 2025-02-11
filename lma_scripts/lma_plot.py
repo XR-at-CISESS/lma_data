@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Plots gridded 3D source products produced by LMA_flash_sort_and_grid.py
 USAGE:

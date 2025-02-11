@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Use lmatools to sort LMA ASCII data into flashes
 Create gridded imagery from those flashes.
@@ -11,7 +10,7 @@ year: 20XX
 month: XX
 days: XX (multiple days separated by spaces)
 """
-import sys, os, glob
+import sys, os, glob, pathlib
 from datetime import datetime, timedelta
 import subprocess
 
@@ -246,9 +245,13 @@ def main():
 
     Data files should be stored in directories by /data/year/month/day/
     """
+    out_dir = get_lma_out_dir()
+    data_out = os.path.join(out_dir, network)
+
+    # Ensure data out directory exists
+    pathlib.Path(data_out).mkdir(parents=True, exist_ok=True)
+
     for day in sorted(days):
-        out_dir = get_lma_out_dir()
-        data_out = os.path.join(out_dir, network)
         rootdir = f"{data_out}/data/{year}/{month}/{day}/"
         filenames = glob.glob(rootdir + "*.gz")
         print("Root Dir: " + rootdir)

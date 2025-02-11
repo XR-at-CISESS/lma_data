@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from subprocess import call
 import os, sys
 from lma_data.LMA_util import get_lma_data_dir
