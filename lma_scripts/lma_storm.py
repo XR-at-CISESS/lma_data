@@ -256,6 +256,7 @@ def main():
     end_time = sys.argv[6]
 
     data_dir = get_lma_data_dir()
+    network_data_dir = os.path.join(data_dir, network)
     out_dir = get_lma_out_dir()
     data_out = os.path.join(out_dir, network)
 
@@ -263,7 +264,7 @@ def main():
     pathlib.Path(data_out).mkdir(parents=True, exist_ok=True)
 
     filenames = glob.glob(
-        data_dir + "/" + "data/" + year + "/" + month + "/" + day + "/" + "*.gz"
+        network_data_dir + "/" + "data/" + year + "/" + month + "/" + day + "/" + "*.gz"
     )
 
     # ---- Define storm length and calculate frame interval -------

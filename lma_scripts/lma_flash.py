@@ -248,13 +248,14 @@ def main():
 
     data_dir = get_lma_data_dir()
     out_dir = get_lma_out_dir()
+    network_data_dir = os.path.join(data_dir, network)
     data_out = os.path.join(out_dir, network)
 
     # Ensure data out directory exists
     pathlib.Path(data_out).mkdir(parents=True, exist_ok=True)
 
     for day in sorted(days):
-        rootdir = f"{data_dir}/data/{year}/{month}/{day}/"
+        rootdir = f"{network_data_dir}/data/{year}/{month}/{day}/"
         filenames = glob.glob(rootdir + "*.gz")
         print("Root Dir: " + rootdir)
         print("Filenames: " + str(filenames))
