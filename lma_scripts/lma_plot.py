@@ -709,15 +709,15 @@ def main():
 
     # --------------- Declair IO Directories --------------------
     out_dir = get_lma_out_dir()
-    grid_dir = f"{out_dir}{network}/grid_files/"
-    plot_dir = f"{out_dir}{network}/maps/"
+    grid_dir = os.path.join(out_dir, network, "grid_files")
+    plot_dir = os.path.join(out_dir, network, "maps")
 
     # --------------- User input parameters --------------------
     params = {"lon_index": (0, 800), "lat_index": (0, 800), "alt_index": (0, 20)}  # km
 
     # ---------- Create Directory for Output Files --------------
     date = f"{year}/{month}/{day}/"
-    outpath = f"{plot_dir}{date}"
+    outpath = os.path.join(plot_dir, date)
     if os.path.exists(outpath) == False:
         os.makedirs(outpath)
         subprocess.call(
@@ -725,7 +725,7 @@ def main():
         )
 
     # ------------- Get List of 3D Gridded Files ----------------
-    filepaths = glob.glob(f"{grid_dir}{date}*source_3d.nc")
+    filepaths = glob.glob(f"{grid_dir}/{date}/*source_3d.nc")
 
     # -----------------------------------------------------------
     # -------------- Generate and Save the Plots ----------------
