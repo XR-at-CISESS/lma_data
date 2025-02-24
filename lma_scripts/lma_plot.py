@@ -73,7 +73,7 @@ def draw_map(
     # extent=[lon_0-offset,lon_0+offset,lat_0-offset, lat_0+offset]
     extent400km = {
         "DCLMA": [-81.4902, -72.2216, 35.1883, 42.3689],
-        "MALMA": [-80.6803, -71.4599, 34.8194, 42.0002],
+        "MALMA": [-77.8, -74.4, 37.1, 39.7],
         "WFFLMA": [-79.9485, -70.7802, 34.4132, 41.5943],
     }
     ax.set_extent(extent400km[network], crs=projection)
