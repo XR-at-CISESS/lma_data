@@ -1,6 +1,5 @@
 def info(network):
     if network == "MALMA":
-
         lat_0 = 38.5
         lon_0 = -76.3
         station_lats = [
@@ -42,6 +41,8 @@ def info(network):
             -76.8756164,
         ]
         mask_length = 7
+        lat_extents = [37.1, 39.7]
+        lon_extents = [-77.8, -74.4]
 
     elif network == "DCLMA":
 
@@ -68,6 +69,8 @@ def info(network):
             -76.8756164,
         ]
         mask_length = 5
+        lat_extents = [35.1883, 42.3689]
+        lon_extents = [-81.4902, -72.2216]
 
     elif network == "WFFLMA" or network == "WFF":
 
@@ -94,5 +97,8 @@ def info(network):
             -76.5556564,
         ]
         mask_length = 4
+        lat_extents = [34.4132, 41.5943]
+        lon_extents = [-79.9485, -70.7802]
 
-    return lat_0, lon_0, station_lats, station_lons, mask_length
+
+    return lat_0, lon_0, station_lats, station_lons, mask_length, lat_extents, lon_extents

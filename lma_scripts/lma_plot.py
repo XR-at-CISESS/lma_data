@@ -28,7 +28,6 @@ from lma_data.LMA_util import get_lma_shapes_dir, get_lma_out_dir
 
 GeoAxes._pcolormesh_patched = Axes.pcolormesh
 
-
 def draw_map(
     ax,
     network="DCLMA",
@@ -69,25 +68,21 @@ def draw_map(
 
     print("\tAdded Features...")
 
-    # offset=3.8
-    # extent=[lon_0-offset,lon_0+offset,lat_0-offset, lat_0+offset]
-    extent400km = {
-        "DCLMA": [-81.4902, -72.2216, 35.1883, 42.3689],
-        "MALMA": [-77.8, -74.4, 37.1, 39.7],
-        "WFFLMA": [-79.9485, -70.7802, 34.4132, 41.5943],
-    }
-    ax.set_extent(extent400km[network], crs=projection)
+     # -------------- Gather network specific variables  --------------
+    lma_info = info(network)
+    station_lats = lma_info[2]
+    station_lons = lma_info[3]
+    lat_extents = lma_info[5]
+    lon_extents = lma_info[6]
+
+    print("\tGot Info...")
+
+    extents = [*lon_extents, *lat_extents]
+    ax.set_extent(extents, crs=projection)
     print("\tSet Extent...")
     ax.set_aspect("auto")
 
     print("\tSet Aspect...")
-
-    # -------------- Gather network specific variables  --------------
-    lma_info = info(network)
-    station_lats = lma_info[2]
-    station_lons = lma_info[3]
-
-    print("\tGot Info...")
 
     # ------------------- Plot LMA Stations -------------------
     ax.scatter(
@@ -205,6 +200,8 @@ def make_plot(
     lma_info = info(network)
     lat_0 = lma_info[0]
     lon_0 = lma_info[1]
+    lat_extents = lma_info[5]
+    lon_extents = lma_info[6]
 
     # --------------------- Setup ColorMap --------------------------
     vmin = data["grid_type"][:].min()
@@ -569,15 +566,8 @@ def make_plot(
     # Place tick marks every 100 kilometers
     # ticklabels = np.arange(-400,500,100)
     ticklabels = ["", "-300", "-200", "-100", "0", "100", "200", "300", ""]
-    if network == "DCLMA":
-        ticklocationx = np.linspace(-81.4902, -72.2216, num=9)
-        ticklocationy = np.linspace(35.1883, 42.3689, num=9)
-    elif network == "MALMA":
-        ticklocationx = np.linspace(-80.6803, -71.4599, num=9)
-        ticklocationy = np.linspace(34.8194, 42.0002, num=9)
-    elif network == "WFFLMA":
-        ticklocationx = np.linspace(-79.9485, -70.7802, num=9)
-        ticklocationy = np.linspace(34.4132, 41.5943, num=9)
+    ticklocationx = np.linspace(*lon_extents, num=9)
+    ticklocationy = np.linspace(*lat_extents, num=9)
 
     ax0.set_xticks(ticklocationx)
     ax0.set_yticks(ticklocationy)
