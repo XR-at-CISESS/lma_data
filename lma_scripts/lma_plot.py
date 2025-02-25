@@ -141,7 +141,7 @@ def get_data(file, lon_index=(0, 800), lat_index=(0, 800), alt_index=(0, 20)):
     frame_interval = int(fname.split("_")[3])  # split filename to get frame interval
 
     # start_time = round_time(start_time, round_to=frame_interval)
-    start_time = round_time(start_time, round_to=60 * 10)
+    start_time = round_time(start_time, round_to=60 * 1)
 
     print("\t\tCalculate summations...")
     # ------------------- Sum TOTAL Source Count -------------------
@@ -278,6 +278,7 @@ def make_plot(
     print("\tCreate Figure...")
 
     # -------- Calcualte Figure Size from Subplot Aspect Ratios --------
+    FA = 0
     F0 = 4.5  # main panel is F0 times the size of the cross section panel
     F1 = 0.25  # cbar panel is F1 times the size of the cross section panel
     F2 = 0.6  # Gap above cbar is F2 times the size of the cross section panel
@@ -298,10 +299,10 @@ def make_plot(
     )
 
     gs = fig.add_gridspec(
-        4,
+        5,
         2,
         width_ratios=(F0, 1),
-        height_ratios=(1, F0, F2, F1),
+        height_ratios=(FA, 1, F0, F2, F1),
         left=0.1,
         right=0.9,
         bottom=0.1,
@@ -313,7 +314,7 @@ def make_plot(
     # ===============================================================
     # ----------------- Plan View Composite (main) ------------------
     ax0 = fig.add_subplot(
-        gs[1, 0],
+        gs[2, 0],
         facecolor=plotrgba,
         frame_on=True,
         xscale="linear",
@@ -363,7 +364,7 @@ def make_plot(
 
     # ------------------ Add subplot Axis and Plot ------------------
     ax1 = fig.add_subplot(
-        gs[0, 0],
+        gs[1, 0],
         sharex=ax0,
         facecolor=plotrgba,
         frame_on=True,
@@ -385,7 +386,7 @@ def make_plot(
     # ===============================================================
     # --------- North-South Composite Cross Section (right) ---------
     ax2 = fig.add_subplot(
-        gs[1, 1:2],
+        gs[2, 1:2],
         sharey=ax0,
         facecolor=plotrgba,
         frame_on=True,
@@ -418,7 +419,7 @@ def make_plot(
     # ===============================================================
     # -------------- Total Sounce Count (top-right) -----------------
     ax3 = fig.add_subplot(
-        gs[0, 1],
+        gs[1, 1],
         facecolor=plotrgba,
         frame_on=True,
         xmargin=0,
@@ -454,8 +455,15 @@ def make_plot(
     )
 
     # ===============================================================
+    # ------------------- Add Altitude/Time -------------------------
+
+    #altitude_time_ax = fig.add_subplot(gs[0, :])
+    #print(data.keys())
+
+
+    # ===============================================================
     # ------------------- Add/Format Colorbar -----------------------
-    ax4 = fig.add_subplot(gs[3, :])
+    ax4 = fig.add_subplot(gs[4, :])
     cbar = fig.colorbar(
         ax=ax4,
         cax=ax4,
