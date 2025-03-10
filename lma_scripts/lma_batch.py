@@ -22,12 +22,12 @@ def process_batch(batch: list[LMADataFile], lma_analysis_args: str, silent_mode:
     duration = 300
     data_files = " ".join([data_file.path for data_file in batch])
     cmd = f"lma_analysis -d {date} -t {time} -s {duration} {lma_analysis_args} {data_files}"
-    
+
     # Attempt to create the process
     with lma_process_lock:
         if lma_shutdown_event.is_set():
             return
-        
+
         lma_analysis_process = subprocess.Popen(
             cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
         )
@@ -58,6 +58,7 @@ def setup_signal_catcher():
                 else:
                     lma_process.terminate()
 
+    signal.signal(signal.SIGINT, on_exit)
     signal.signal(signal.SIGTERM, on_exit)
 
 
