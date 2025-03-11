@@ -13,15 +13,9 @@ day: XX
 start_time: HHMMSS
 end_time: HHMMSS
 """
-network = sys.argv[1]
-year = sys.argv[2]
-month = sys.argv[3]
-day = sys.argv[4]
-start_time = sys.argv[5]
-end_time = sys.argv[6]
 import sys, os, glob, pathlib
 from datetime import datetime, timedelta
-import subprocess
+import subprocess, argparse
 
 from lmatools.io.LMA import LMADataset
 from lmatools.flashsort.gen_autorun import logger_setup, sort_files
@@ -241,19 +235,32 @@ def grid(
 #      ================ MAIN SCRIPT ===================
 # ===========================================================
 
+def create_parser():
+    parser = argparse.ArgumentParser(
+        prog="lma_storm",
+        description="Grid LMA data files and process them",
+    )
+    parser.add_argument("network")
+    parser.add_argument("year", type=str)
+    parser.add_argument("month", type=str)
+    parser.add_argument("day", type=str)
+    parser.add_argument("start_time", type=str)
+    parser.add_argument("end_time", type=str)
+
+    return parser
+
 
 def main():
-    if len(sys.argv) < 7:
-        print("Usage: lma_storm <network> <year> <month> <day> <start_time> <end_time>")
-        exit(1)
+    parser = create_parser()
+    args = parser.parse_args()
 
     # ---- Assign Directory/File Paths from User Input -------
-    network = sys.argv[1]
-    year = sys.argv[2]
-    month = sys.argv[3]
-    day = sys.argv[4]
-    start_time = sys.argv[5]
-    end_time = sys.argv[6]
+    network = args.network
+    year = args.year
+    month = args.month
+    day = args.day
+    start_time = args.start_time
+    end_time = args.end_time
 
     data_dir = get_lma_data_dir()
     network_data_dir = os.path.join(data_dir, network)

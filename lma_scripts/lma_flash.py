@@ -10,7 +10,7 @@ year: 20XX
 month: XX
 days: XX (multiple days separated by spaces)
 """
-import sys, os, glob, pathlib
+import sys, os, glob, pathlib, argparse
 from datetime import datetime, timedelta
 import subprocess
 
@@ -229,15 +229,28 @@ def grid(
 # ===========================================================
 #      ================ MAIN SCRIPT ===================
 # ===========================================================
-def main():
-    if len(sys.argv) < 4:
-        print("Usage: lma_flash <network> <year> <month> [days]")
-        exit(1)
+def create_parser():
+    parser = argparse.ArgumentParser(
+        prog="lma_flash",
+        description="Grid LMA data files and process them",
+    )
+    parser.add_argument("network")
+    parser.add_argument("year", type=str)
+    parser.add_argument("month", type=str)
+    parser.add_argument("days", type=str, nargs=argparse.REMAINDER)
 
-    network = sys.argv[1]
-    year = sys.argv[2]
-    month = sys.argv[3]
-    days = sys.argv[4:]
+    return parser
+
+
+
+def main():
+    parser = create_parser()
+    args = parser.parse_args()
+
+    network = args.network
+    year = args.year
+    month = args.month
+    days = args.days
 
     """
     Directories for the HDF5 files, grids, and plots are created within the
