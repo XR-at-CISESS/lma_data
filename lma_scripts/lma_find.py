@@ -49,7 +49,7 @@ def create_parser():
         help="A comma-separated filter for stations to include in the results",
     )
     parser.add_argument(
-        "-g", "--group", dest="group_files", action="store_true", default=False
+        "-g", "--group", dest="group_files", action="store_true", default=False, help="Groups data files occuring at the same time together."
     )
     parser.add_argument(
         "-p",
