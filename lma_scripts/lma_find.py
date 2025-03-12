@@ -13,12 +13,41 @@ def create_parser():
         prog="lma_find", description="Helps locate LMA data files."
     )
 
-    parser.add_argument("data_dir")
-    parser.add_argument("-sd", "--start-date", dest="start_date")
-    parser.add_argument("-ed", "--end-date", dest="end_date")
-    parser.add_argument("-d", "--date", dest="date")
-    parser.add_argument("-n", "--networks", dest="networks", action="append")
-    parser.add_argument("-s", "--stations", action="append", dest="stations")
+    parser.add_argument(
+        "data_dir", help="The directory to search for LMA data files within."
+    )
+    parser.add_argument(
+        "-sd",
+        "--start-date",
+        dest="start_date",
+        help="A start date before which data files are discarded. Cannot be simultaneously specified with an exact date.",
+    )
+    parser.add_argument(
+        "-ed",
+        "--end-date",
+        dest="end_date",
+        help="An end date after which data files are discarded. Cannot be simultaneously specified with an exact date.",
+    )
+    parser.add_argument(
+        "-d",
+        "--date",
+        dest="date",
+        help="An EXACT date to search for. Cannot be simultaneously specified with a start/end date.",
+    )
+    parser.add_argument(
+        "-n",
+        "--networks",
+        dest="networks",
+        action="append",
+        help="A comma-separated filter for networks to include in the results",
+    )
+    parser.add_argument(
+        "-s",
+        "--stations",
+        action="append",
+        dest="stations",
+        help="A comma-separated filter for stations to include in the results",
+    )
     parser.add_argument(
         "-g", "--group", dest="group_files", action="store_true", default=False
     )
