@@ -2,7 +2,7 @@ import argparse
 from datetime import datetime
 from lma_data.LMA_browser import LMABrowser
 from lma_data.LMA_data_file import LMADataFile
-from lma_data.LMA_cli import parse_date_string
+from lma_data.LMA_cli import parse_date_string, flatten_arg_values
 from typing import Optional
 from rich.table import Table
 from rich.console import Console
@@ -85,12 +85,13 @@ def print_table(data_files: list[LMADataFile], group_files: bool):
 def print_paths(data_files: list[LMADataFile], group_files: bool):
     last_date_time = None
     path_group = []
+
     def print_path_group():
         if not path_group:
             return
-        
+
         print(",".join(path_group))
-        
+
     for data_file in data_files:
         if group_files:
             if last_date_time != data_file.datetime:
@@ -98,10 +99,10 @@ def print_paths(data_files: list[LMADataFile], group_files: bool):
                 last_date_time = data_file.datetime
                 path_group = [data_file.path]
             else:
-                 path_group.append(data_file.path)
+                path_group.append(data_file.path)
         else:
             print(data_file.path)
-    
+
     if group_files:
         print_path_group()
 
@@ -111,17 +112,6 @@ def print_results(data_files: list[LMADataFile], group_files: bool, pretty: bool
         print_table(data_files, group_files)
     else:
         print_paths(data_files, group_files)
-
-
-def flatten_arg_values(arg_values: Optional[list[str]]) -> Optional[list[str]]:
-    if not arg_values:
-        return None
-
-    return [
-        arg_value
-        for arg_comma_values in arg_values
-        for arg_value in arg_comma_values.split(",")
-    ]
 
 
 def main():
