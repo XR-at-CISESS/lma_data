@@ -33,6 +33,8 @@ class LMADataFile:
             return None
 
         station_identifier, network, station_name, date, time = lma_match.groups()
+        station_identifier = station_identifier.lower()
+        network = network.lower()
         data_datetime = datetime.strptime(f"{date}T{time}", "%y%m%dT%H%M%S")
         lma_data_file = LMADataFile(
             data_path, station_identifier, network, station_name, data_datetime
@@ -40,8 +42,11 @@ class LMADataFile:
 
         return lma_data_file
 
+    def __str__(self):
+        return f"{self.datetime} @ {self.station_name} [{self.network}/{self.station_identifier}]"
+    
     def __repr__(self):
-        return f"LMADataFile({self.datetime} @ {self.station_name} [{self.network}/{self.station_identifier}])"
+        return f"LMADataFile({str(self)})"
 
     def __lt__(self, other: Self):
         return (self.datetime, self.network, self.station_identifier) < (

@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional
 from lma_data.LMA_data_file import LMADataFile
 from lma_data.LMA_browser import LMABrowser
+from lma_data.LMA_cli import parse_date_string
 from rich.progress import Progress
 from threading import Event, Lock
 
@@ -105,12 +106,6 @@ def create_parser():
     return parser
 
 
-def parse_date_string(date_str):
-    try:
-        return datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S")
-    except ValueError:
-        print(f"Invalid date format: {date_str}")
-        exit(1)
 
 
 def main():
