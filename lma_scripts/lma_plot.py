@@ -5,9 +5,9 @@ python lma-plot {network} {year} {month} {day}
 """
 
 import os
-import sys
 import subprocess
 import glob
+import argparse
 
 import numpy as np
 from datetime import datetime, timedelta
@@ -27,6 +27,7 @@ from lma_data.LMA_info import info
 from lma_data.LMA_util import get_lma_shapes_dir, get_lma_out_dir
 
 GeoAxes._pcolormesh_patched = Axes.pcolormesh
+
 
 def draw_map(
     ax,
@@ -68,7 +69,7 @@ def draw_map(
 
     print("\tAdded Features...")
 
-     # -------------- Gather network specific variables  --------------
+    # -------------- Gather network specific variables  --------------
     lma_info = info(network)
     station_lats = lma_info[2]
     station_lons = lma_info[3]
@@ -695,16 +696,28 @@ def make_plot(
 # ===========================================================
 
 
+def create_parser():
+    parser = argparse.ArgumentParser(
+        prog="lma_plot",
+        description="Create plots of LMA data",
+    )
+    parser.add_argument("network")
+    parser.add_argument("year", type=str)
+    parser.add_argument("month", type=str)
+    parser.add_argument("day", type=str)
+
+    return parser
+
+
 def main():
-    if len(sys.argv) < 5:
-        print("Usage: lma_plot <network> <year> <month> <days>")
-        exit(1)
+    parser = create_parser()
+    args = parser.parse_args()
 
     # ---------- Assign Date Variables from User Input ----------
-    network = sys.argv[1]
-    year = sys.argv[2]
-    month = sys.argv[3]
-    day = sys.argv[4]
+    network = args.network
+    year = str(args.year)
+    month = str(args.month)
+    day = str(args.day)
 
     # --------------- Declair IO Directories --------------------
     out_dir = get_lma_out_dir()

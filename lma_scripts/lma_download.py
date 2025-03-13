@@ -1,5 +1,5 @@
 from subprocess import call
-import os, sys
+import os, argparse
 from lma_data.LMA_util import get_lma_data_dir
 
 
@@ -21,15 +21,26 @@ def download_day(network, year, month, days=[]):
         call(["wget", "-w", "2", ftp, "-P", outpath])
 
 
-def main():
-    if len(sys.argv) < 4:
-        print("Usage: lma_download <network> <year> <month> [days]")
-        exit(1)
+def create_parser():
+    parser = argparse.ArgumentParser(
+        prog="lma_download",
+        description="Quickly process multiple LMA files using lma_analysis",
+    )
+    parser.add_argument("network")
+    parser.add_argument("year")
+    parser.add_argument("month")
+    parser.add_argument("days", nargs=argparse.REMAINDER)
+    return parser
 
-    network = sys.argv[1]
-    year = sys.argv[2]
-    month = sys.argv[3]
-    days = sys.argv[4:]
+
+def main():
+    parser = create_parser()
+    args = parser.parse_args()
+
+    network = args.network
+    year = args.year
+    month = args.month
+    days = args.days
 
     download_day(network, year, month, days)
 
