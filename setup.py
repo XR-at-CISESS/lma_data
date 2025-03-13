@@ -10,7 +10,8 @@ setup(
             "lma_flash=lma_scripts.lma_flash:main",
             "lma_plot=lma_scripts.lma_plot:main",
             "lma_storm=lma_scripts.lma_storm:main",
-            "lma_batch=lma_scripts.lma_batch:main"
+            "lma_batch=lma_scripts.lma_batch:main",
+            "lma_find=lma_scripts.lma_find:main"
         ]
     },
     packages=find_packages(),
