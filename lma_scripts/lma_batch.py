@@ -1,5 +1,4 @@
-import argparse, subprocess, os, signal
-from datetime import datetime
+import argparse, subprocess, os, signal, shlex
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional
 from lma_data.LMA_data_file import LMADataFile
@@ -20,9 +19,9 @@ def process_batch(batch: list[LMADataFile], lma_analysis_args: str, silent_mode:
     lma_datetime = batch[0].datetime
     date = lma_datetime.strftime("%Y%m%d")
     time = lma_datetime.strftime("%H%M%S")
-    duration = 300
     data_files = " ".join([data_file.path for data_file in batch])
-    cmd = f"lma_analysis -d {date} -t {time} -s {duration} {lma_analysis_args} {data_files}"
+    cmd = f"lma_analysis -d {date} -t {time} {lma_analysis_args} {data_files}"
+    cmd_args = shlex.split(cmd)
 
     # Attempt to create the process
     with lma_process_lock:
@@ -30,7 +29,7 @@ def process_batch(batch: list[LMADataFile], lma_analysis_args: str, silent_mode:
             return
 
         lma_analysis_process = subprocess.Popen(
-            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+            cmd_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
         )
         lma_processes.append(lma_analysis_process)
 
@@ -48,7 +47,7 @@ def setup_signal_catcher():
     def on_exit(signum, frame):
         did_already_shutdown = lma_shutdown_event.is_set()
         if not did_already_shutdown:
-            print("Terminating lma_analysis processes...")
+            print("Terminating...")
 
         with lma_process_lock:
             lma_shutdown_event.set()
@@ -98,14 +97,12 @@ def create_parser():
         description="Quickly process multiple LMA files using lma_analysis",
     )
     parser.add_argument("data_dir")
-    parser.add_argument("start_date")
-    parser.add_argument("end_date")
+    parser.add_argument("-sd", "--start_date", dest="start_date")
+    parser.add_argument("-ed", "--end_date", dest="end_date")
     parser.add_argument(dest="lma_analysis_args", nargs=argparse.REMAINDER, default="")
-    parser.add_argument("--num_workers", type=int, dest="num_workers")
+    parser.add_argument("-n", "--num_workers", type=int, dest="num_workers")
     parser.add_argument("--silent", "-s", action="store_true", dest="silent_mode")
     return parser
-
-
 
 
 def main():

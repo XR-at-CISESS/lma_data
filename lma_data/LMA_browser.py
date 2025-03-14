@@ -2,6 +2,7 @@ import glob, os
 from lma_data.LMA_data_file import LMADataFile
 from datetime import datetime
 from typing import Optional
+from lma_data.LMA_util import datetime_within
 
 
 class LMABrowser:
@@ -62,29 +63,21 @@ class LMABrowser:
                 station_files = network[station_id]
 
                 for data_file in station_files:
-                    if start_date and data_file.datetime < start_date:
-                        continue
-
-                    if end_date and data_file.datetime > end_date:
-                        continue
-
-                    queried_files.append(data_file)  
+                    if datetime_within(data_file.datetime, start_date, end_date):
+                        queried_files.append(data_file)  
 
         queried_files.sort()
 
         return queried_files
 
     def batch(
-        self, start_date: datetime, end_date: datetime
+        self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None
     ) -> list[list[LMADataFile]]:
         batches = {}
         for network in self.data.values():
             for station in network.values():
                 for data_file in station:
-                    if (
-                        start_date <= data_file.datetime
-                        and data_file.datetime <= end_date
-                    ):
+                    if datetime_within(data_file.datetime, start_date, end_date):
                         batch = batches.get(data_file.datetime)
                         if not data_file.datetime in batches:
                             batch = batches[data_file.datetime] = []
