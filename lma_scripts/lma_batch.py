@@ -69,6 +69,7 @@ def setup_signal_catcher():
 
 def process_batches(
     batches: list[list[LMADataFile]],
+    lma_analysis_bin: str,
     lma_analysis_args: str,
     silent_mode: bool = False,
     num_workers: Optional[int] = None,
@@ -82,7 +83,9 @@ def process_batches(
 
             futures = [
                 executor.submit(
-                    lambda batch: process_batch(batch, lma_analysis_args, silent_mode),
+                    lambda batch: process_batch(
+                        batch, lma_analysis_bin, lma_analysis_args, silent_mode
+                    ),
                     batch,
                 )
                 for batch in batches
