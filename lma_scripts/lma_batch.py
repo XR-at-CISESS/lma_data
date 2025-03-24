@@ -12,7 +12,12 @@ lma_process_lock = Lock()
 lma_shutdown_event = Event()
 
 
-def process_batch(batch: list[LMADataFile], lma_analysis_args: str, silent_mode: bool):
+def process_batch(
+    batch: list[LMADataFile],
+    lma_analysis_bin: str,
+    lma_analysis_args: str,
+    silent_mode: bool,
+):
     if len(batch) == 0:
         return
 
@@ -20,7 +25,7 @@ def process_batch(batch: list[LMADataFile], lma_analysis_args: str, silent_mode:
     date = lma_datetime.strftime("%Y%m%d")
     time = lma_datetime.strftime("%H%M%S")
     data_files = " ".join([data_file.path for data_file in batch])
-    cmd = f"lma_analysis -d {date} -t {time} {lma_analysis_args} {data_files}"
+    cmd = f"{lma_analysis_bin} -d {date} -t {time} {lma_analysis_args} {data_files}"
     cmd_args = shlex.split(cmd)
 
     # Attempt to create the process
@@ -102,6 +107,14 @@ def create_parser():
     parser.add_argument(dest="lma_analysis_args", nargs=argparse.REMAINDER, default="")
     parser.add_argument("-n", "--num_workers", type=int, dest="num_workers")
     parser.add_argument("--silent", "-s", action="store_true", dest="silent_mode")
+    parser.add_argument(
+        "-b",
+        "--lma-analysis-bin",
+        type=str,
+        dest="lma_analysis_bin",
+        help="The location of the lma_analysis binary",
+        default="lma_analysis",
+    )
     return parser
 
 
@@ -115,10 +128,13 @@ def main():
     end = parse_date_string(args.end_date)
     num_workers = args.num_workers
     silent_mode = args.silent_mode
+    lma_analysis_bin = args.lma_analysis_bin
 
     batches = browser.batch(start, end)
     lma_analysis_args = " ".join(args.lma_analysis_args)
-    process_batches(batches, lma_analysis_args, silent_mode, num_workers)
+    process_batches(
+        batches, lma_analysis_bin, lma_analysis_args, silent_mode, num_workers
+    )
 
 
 if __name__ == "__main__":
