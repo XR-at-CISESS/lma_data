@@ -4,7 +4,6 @@ from typing import Optional, Self
 from dataclasses import dataclass
 
 
-@dataclass
 class LMADataFile:
     """
     Parsing utilities for a LMA data file
@@ -44,7 +43,7 @@ class LMADataFile:
 
     def __str__(self):
         return f"{self.datetime} @ {self.station_name} [{self.network}/{self.station_identifier}]"
-    
+
     def __repr__(self):
         return f"LMADataFile({str(self)})"
 
