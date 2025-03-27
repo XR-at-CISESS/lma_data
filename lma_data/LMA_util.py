@@ -1,5 +1,6 @@
-import os, datetime, re
+import os, datetime
 from typing import Optional
+from typing import TypeVar, Callable, Any
 
 
 def get_lma_data_dir():
@@ -57,3 +58,39 @@ def datetime_within(
         return False
 
     return True
+
+
+T = TypeVar("T")
+
+
+def batch(items: list[T], *batch_properties: Callable[[T], Any]):
+    batches = []
+    batch_map = {}
+    for item in items:
+        property_map = batch_map
+
+        for i in range(len(batch_properties) - 1):
+            batch_property = batch_properties[i]
+            val = batch_property(item)
+            if not val in property_map:
+                property_map[val] = {}
+
+            property_map = property_map[val]
+
+        last_val = batch_properties[-1](item)
+        if not last_val in property_map:
+            property_map[last_val] = []
+
+        batch: list[T] = property_map[last_val]
+        batch.append(item)
+
+    stack = [batch_map]
+    while len(stack) > 0:
+        item = stack.pop()
+        if isinstance(item, dict):
+            for val in item.values():
+                stack.append(val)
+        elif isinstance(item, list):
+            batches.append(item)
+
+    return batches

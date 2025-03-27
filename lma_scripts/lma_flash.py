@@ -10,6 +10,7 @@ year: 20XX
 month: XX
 days: XX (multiple days separated by spaces)
 """
+
 import sys, os, glob, pathlib, argparse
 from datetime import datetime, timedelta
 import subprocess
@@ -17,6 +18,11 @@ import subprocess
 from lmatools.io.LMA import LMADataset
 from lmatools.flashsort.gen_autorun import logger_setup, sort_files
 from lmatools.flashsort.gen_sklearn import DBSCANFlashSorter
+from lma_data.browser.file_browser import FileBrowser
+from lma_data.LMA_filters import LMAFilters
+from lma_data.lma_analysis_data_file import LMAAnalysisDataFile
+from lma_data.browser.filters.non_empty import NonEmptyFileFilter
+from lma_data.LMA_util import batch
 
 from lmatools.grid.make_grids import (
     grid_h5flashfiles,
@@ -29,7 +35,6 @@ from six.moves import map
 import logging, logging.handlers
 
 from lma_data.LMA_info import info
-from lma_data.LMA_util import get_lma_data_dir, get_lma_out_dir
 
 
 def tfromfile(name):
@@ -39,7 +44,7 @@ def tfromfile(name):
     return y + 2000, m, d, H, M, S
 
 
-def sort_flashes(files, base_sort_dir, params):
+def sort_flashes(files, outdir, params):
     """Given a list of LMA ASCII data files, created HDF5 flash-sorted data
     files in base_sort_dir/h5_files.
 
@@ -55,30 +60,7 @@ def sort_flashes(files, base_sort_dir, params):
 
     """
     # -------------------- Setup Log File -----------------------
-    # base_sort_dir = outpath
-    logger_setup(base_sort_dir)
-    h5_dir = os.path.join(base_sort_dir, "h5_files")
-    y, m, d, H, M, S = tfromfile(files[0])
-    date = datetime(y, m, d, H, M, S)
-
-    # ---------- Create Directory for HDF5 Files ----------------
-    # Create HDF5 flash files
-    base_out_dir = h5_dir + "/20%s" % (date.strftime("%y/%m/%d"))
-    if os.path.exists(base_out_dir) == False:
-        os.makedirs(base_out_dir)
-        subprocess.call(
-            [
-                "chmod",
-                "a+w",
-                base_out_dir,
-                h5_dir + "/20%s" % (date.strftime("%y/%m")),
-                h5_dir + "/20%s" % (date.strftime("%y")),
-            ]
-        )
-
-    # ----------- Add 'tag' to directory path (?) ---------------
-    tag = ""
-    outdir = os.path.join(base_out_dir, tag)
+    logger_setup(outdir)
 
     # ----------- Write 'param' settings to file ----------------
     info = open(os.path.join(outdir, "input_params.py"), "w")
@@ -94,7 +76,6 @@ def sort_flashes(files, base_sort_dir, params):
         # ---------------- sort_files SubFunction -------------------
         # sort_files(files, outdir, cluster)
         # def sort_files(files, output_path, clusterer):
-        files = files
         output_path = outdir
         clusterer = cluster
 
@@ -105,6 +86,7 @@ def sort_flashes(files, base_sort_dir, params):
 
         h5_outfiles = []
         for a_file in files:
+            print(a_file)
             try:
                 # ---------- create filename with .flash extention ----------
                 file_base_name = os.path.split(a_file)[-1].replace(".gz", "")
@@ -138,16 +120,14 @@ def sort_flashes(files, base_sort_dir, params):
 
     # ------------------------------------------------------------
     # ------------- List HDF5 files that were created ------------
-    h5_filenames = glob.glob(
-        h5_dir + "/20%s/*.dat.flash.h5" % (date.strftime("%y/%m/%d"))
-    )
+    h5_filenames = glob.glob(os.path.join(outdir, "*.dat.flash.h5"))
     h5_filenames.sort()
     return h5_filenames
 
 
 def grid(
     h5_filenames,
-    base_sort_dir,
+    outpath,
     min_points=1,
     dx=1.0e3,
     dy=1.0e3,
@@ -179,28 +159,15 @@ def grid(
     y_bnd_km = y_bnd
     z_bnd_km = z_bnd
 
-    grid_dir = os.path.join(base_sort_dir, "grid_files")
     # There are similar functions in lmatools to grid on a regular x,y grid in some map projection.
     dx, dy, x_bnd, y_bnd = dlonlat_at_grid_center(
         ctr_lat, ctr_lon, dx=dx_km, dy=dy_km, x_bnd=x_bnd_km, y_bnd=y_bnd_km
     )
+
     for f in h5_filenames:
         y, m, d, H, M, S = tfromfile(f)
         start_time = datetime(y, m, d, H, M, S)
         end_time = start_time + timedelta(0, frame_interval)
-        date = start_time
-        outpath = grid_dir + "/20%s" % (date.strftime("%y/%m/%d"))
-        if os.path.exists(outpath) == False:
-            os.makedirs(outpath)
-            subprocess.call(
-                [
-                    "chmod",
-                    "a+w",
-                    outpath,
-                    grid_dir + "/20%s" % (date.strftime("%y/%m")),
-                    grid_dir + "/20%s" % (date.strftime("%y")),
-                ]
-            )
         if True:
             grid_h5flashfiles(
                 h5_filenames,
@@ -234,44 +201,37 @@ def create_parser():
         prog="lma_flash",
         description="Grid LMA data files and process them",
     )
-    parser.add_argument("network")
-    parser.add_argument("year", type=str)
-    parser.add_argument("month", type=str)
-    parser.add_argument("days", type=str, nargs=argparse.REMAINDER)
+    parser.add_argument("data_dir")
+    parser.add_argument("out_dir")
 
     return parser
 
 
-
 def main():
     parser = create_parser()
+    date_filter = LMAFilters[LMAAnalysisDataFile].create_date_filter(
+        lambda _, file: file.datetime
+    )
+    network_filter = LMAFilters[LMAAnalysisDataFile].create_network_filter(
+        lambda _, file: file.network
+    )
+    non_empty_filter = NonEmptyFileFilter()
+    filters = [date_filter, network_filter, non_empty_filter]
+    LMAFilters.apply_filters_to_argparser(parser, *filters)
     args = parser.parse_args()
 
-    network = args.network
-    year = args.year
-    month = args.month
-    days = args.days
-
-    """
-    Directories for the HDF5 files, grids, and plots are created within the
-    directory indicated by data_out
-
-    Data files should be stored in directories by /data/year/month/day/
-    """
-
-    data_dir = get_lma_data_dir()
-    out_dir = get_lma_out_dir()
-    network_data_dir = os.path.join(data_dir, network)
-    data_out = os.path.join(out_dir, network)
+    data_dir: str = args.data_dir
+    out_dir: str = args.out_dir
 
     # Ensure data out directory exists
-    pathlib.Path(data_out).mkdir(parents=True, exist_ok=True)
+    pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)
 
-    for day in sorted(days):
-        rootdir = f"{network_data_dir}/data/{year}/{month}/{day}/"
-        filenames = glob.glob(rootdir + "*.gz")
-        print("Root Dir: " + rootdir)
-        print("Filenames: " + str(filenames))
+    browser = FileBrowser(LMAAnalysisDataFile.try_parse, "**/*.gz")
+    files = browser.find(data_dir, **vars(args))
+    batches = batch(files, lambda f: f.network)
+
+    for file_batch in batches:
+        network = file_batch[0].network
         lma_info = info(network)
         params = {
             "stations": (6, 99),  # range of allowable numbers of contributing stations
@@ -288,26 +248,17 @@ def main():
             "altitude": (0, 20000),
         }  # range of allowable altitude
 
-        # ------- Create List of non-empty Data Files -----------
-        data_files = []
-        for file in filenames:
-            fname = os.path.basename(file)
-            f_time = int(float((fname.split("_")[2])))
-            if os.stat(file).st_size > 2048:
-                data_files.append(file)
-            else:
-                print("file has no data")
-                continue
-
         # -------------------------------------------------------
         # ----- Cluster Sources into Flashes (HDF5 files) -------
-        h5_filenames = sort_flashes(data_files, data_out, params)
+        paths = list(map(lambda f: f.path, file_batch))
+        print(paths)
+        h5_filenames = sort_flashes(paths, out_dir, params)
 
         # -------------------------------------------------------
         # ---------- Produce Gridded NetCDF files ---------------
         grid(
             h5_filenames,
-            data_out,
+            out_dir,
             min_points=params["min_points"],
             dx=1.0e3,
             dy=1.0e3,

@@ -28,6 +28,6 @@ class DateFilter(BrowserFilter[T]):
 
         return datetime_within(path_datetime, start_date, end_date)
 
-    def add_parser_args(self, parser: argparse.ArgumentParser):
+    def apply_to_argparser(self, parser: argparse.ArgumentParser):
         parser.add_argument("--start-date", dest=self.start_date_arg_name, type=str)
         parser.add_argument("--end-date", dest=self.end_date_arg_name, type=str)

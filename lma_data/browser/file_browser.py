@@ -10,10 +10,14 @@ def default_mapper(path: str) -> str:
 
 
 class FileBrowser(Generic[T]):
-    def __init__(self, mapper: Callable[[str], Optional[T]] = default_mapper):
+    def __init__(
+        self,
+        mapper: Callable[[str], Optional[T]] = default_mapper,
+        glob_pathname="**/*.*",
+    ):
         self._filters: list[BrowserFilter[T]] = []
         self._mapper = mapper
-        self.glob_pathname = "**/*.*"
+        self.glob_pathname = glob_pathname
 
     def add_filter(self, browser_filter: BrowserFilter):
         self._filters.append(browser_filter)

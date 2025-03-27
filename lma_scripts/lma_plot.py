@@ -5,8 +5,6 @@ python lma-plot {network} {year} {month} {day}
 """
 
 import os
-import subprocess
-import glob
 import argparse
 
 import numpy as np
@@ -25,6 +23,11 @@ from cartopy.mpl.geoaxes import GeoAxes
 
 from lma_data.LMA_info import info
 from lma_data.LMA_util import get_lma_shapes_dir, get_lma_out_dir
+from lma_data.browser.file_browser import FileBrowser
+from lma_data.lmatools_file import LMAToolsFile
+from lma_data.browser.filters.date import DateFilter
+from lma_data.browser.filters.options import OptionsFilter
+from lma_data.LMA_filters import LMAFilters
 
 GeoAxes._pcolormesh_patched = Axes.pcolormesh
 
@@ -458,9 +461,8 @@ def make_plot(
     # ===============================================================
     # ------------------- Add Altitude/Time -------------------------
 
-    #altitude_time_ax = fig.add_subplot(gs[0, :])
-    #print(data.keys())
-
+    # altitude_time_ax = fig.add_subplot(gs[0, :])
+    # print(data.keys())
 
     # ===============================================================
     # ------------------- Add/Format Colorbar -----------------------
@@ -679,7 +681,7 @@ def make_plot(
     filepathway = file.split("/")
     filename = filepathway[-1].split(".")
     filename = "".join(filename[:-1])
-    filename = "".join([outpath, filename, ".", image_type])
+    filename = os.path.join(outpath, "".join([filename, ".", image_type]))
     if do_save:
         plt.savefig(
             filename,
@@ -701,55 +703,51 @@ def create_parser():
         prog="lma_plot",
         description="Create plots of LMA data",
     )
-    parser.add_argument("network")
-    parser.add_argument("year", type=str)
-    parser.add_argument("month", type=str)
-    parser.add_argument("day", type=str)
+
+    parser.add_argument("data_dir")
+    parser.add_argument("out_dir")
 
     return parser
 
 
 def main():
     parser = create_parser()
+    date_filter = LMAFilters[LMAToolsFile].create_date_filter(
+        lambda _, file: file.datetime
+    )
+    network_filter = LMAFilters[LMAToolsFile].create_network_filter(
+        lambda _, file: file.prefix
+    )
+    filters = [date_filter, network_filter]
+    LMAFilters.apply_filters_to_argparser(parser, *filters)
     args = parser.parse_args()
 
     # ---------- Assign Date Variables from User Input ----------
-    network = args.network
-    year = str(args.year)
-    month = str(args.month)
-    day = str(args.day)
+    data_dir = args.data_dir
 
     # --------------- Declair IO Directories --------------------
-    out_dir = get_lma_out_dir()
-    grid_dir = os.path.join(out_dir, network, "grid_files")
-    plot_dir = os.path.join(out_dir, network, "maps")
+    outpath = args.out_dir
+
+    os.makedirs(outpath, exist_ok=True)
 
     # --------------- User input parameters --------------------
     params = {"lon_index": (0, 800), "lat_index": (0, 800), "alt_index": (0, 20)}  # km
 
-    # ---------- Create Directory for Output Files --------------
-    date = f"{year}/{month}/{day}/"
-    outpath = os.path.join(plot_dir, date)
-    if os.path.exists(outpath) == False:
-        os.makedirs(outpath)
-        subprocess.call(
-            ["chmod", "a+w", outpath, plot_dir + year + "/" + month, plot_dir + year]
-        )
-
     # ------------- Get List of 3D Gridded Files ----------------
-    filepaths = glob.glob(f"{grid_dir}/{date}/*source_3d.nc")
+    browser = FileBrowser(LMAToolsFile.try_parse, glob_pathname="**/*source_3d.nc")
+    LMAFilters.add_filters_to_browser(browser, *filters)
 
     # -----------------------------------------------------------
     # -------------- Generate and Save the Plots ----------------
-    print(f"grid_dir = {grid_dir}")
-    print(f"plot_dir = {plot_dir}")
     print("Cycle through 3D gridded files.....")
 
+    filepaths = browser.find(data_dir, **vars(args))
     for file in filepaths:
         # ------------ Get Data from Gridded NetCDF Files ------------
-        print(file)
+        path = file.path
+        network = file.prefix
         data = get_data(
-            file,
+            path,
             lon_index=params["lon_index"],
             lat_index=params["lat_index"],
             alt_index=params["alt_index"],
@@ -757,7 +755,7 @@ def main():
         # --------------------- Generate Figure ---------------------
         make_plot(
             data,
-            file,
+            path,
             grid_name="src_density",
             network=network,
             outpath=outpath,
