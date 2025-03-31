@@ -6,9 +6,9 @@ from lma_data.LMA_browser import LMABrowser
 from lma_data.browser.file_browser import FileBrowser
 from lma_data.LMA_filters import LMAFilters
 from lma_data.LMA_util import batch
+from lma_data.lma_analysis_data_file import LMAAnalysisDataFile
 from rich.progress import Progress
 from threading import Event, Lock
-from time import sleep
 
 lma_processes: list[subprocess.Popen[str]] = []
 lma_process_lock = Lock()
@@ -17,14 +17,11 @@ lma_shutdown_event = Event()
 
 def process_batch(
     batch: list[LMADataFile],
+    out_dir: str,
     lma_analysis_bin: str,
     lma_analysis_args: str,
     silent_mode: bool,
 ):
-    sleep(3)
-    print("done")
-    return
-
     if len(batch) == 0:
         return
 
@@ -32,7 +29,7 @@ def process_batch(
     date = lma_datetime.strftime("%Y%m%d")
     time = lma_datetime.strftime("%H%M%S")
     data_files = " ".join([data_file.path for data_file in batch])
-    cmd = f"{lma_analysis_bin} -d {date} -t {time} {lma_analysis_args} {data_files}"
+    cmd = f"{lma_analysis_bin} -d {date} -t {time} -o {out_dir} {lma_analysis_args} {data_files}"
     cmd_args = shlex.split(cmd)
 
     # Attempt to create the process
@@ -76,6 +73,7 @@ def setup_signal_catcher():
 
 def process_batches(
     batches: list[list[LMADataFile]],
+    out_dir: str,
     lma_analysis_bin: str,
     lma_analysis_args: str,
     silent_mode: bool = False,
@@ -91,7 +89,7 @@ def process_batches(
             futures = [
                 executor.submit(
                     lambda batch: process_batch(
-                        batch, lma_analysis_bin, lma_analysis_args, silent_mode
+                        batch, out_dir, lma_analysis_bin, lma_analysis_args, silent_mode
                     ),
                     batch,
                 )
@@ -113,6 +111,7 @@ def create_parser():
     )
 
     parser.add_argument("data_dir")
+    parser.add_argument("out_dir")
     parser.add_argument(dest="lma_analysis_args", nargs=argparse.REMAINDER, default="")
 
     parser.add_argument("-n", "--num_workers", type=int, dest="num_workers")
@@ -128,6 +127,18 @@ def create_parser():
     return parser
 
 
+def create_cache_filter():
+    cache_browser = FileBrowser(LMAAnalysisDataFile.try_parse)
+    cache_filter = LMAFilters[LMADataFile].create_cache_filter_from_browser(
+        cache_browser,
+        lambda _, file: file.datetime,
+        lambda _, file: file.datetime,
+        lambda args: args["out_dir"],
+    )
+
+    return cache_filter
+
+
 def main():
     parser = create_parser()
 
@@ -140,7 +151,9 @@ def main():
     station_filter = LMAFilters[LMADataFile].create_station_filter(
         lambda _, file: file.station_identifier
     )
-    filters = [date_filter, network_filter, station_filter]
+    cache_filter = create_cache_filter()
+
+    filters = [date_filter, network_filter, station_filter, cache_filter]
 
     LMAFilters.apply_filters_to_argparser(parser, *filters)
     args = parser.parse_args()
@@ -151,12 +164,13 @@ def main():
 
     num_workers = args.num_workers
     silent_mode = args.silent_mode
+    out_dir = args.out_dir
     lma_analysis_bin = args.lma_analysis_bin
 
     batches = batch(data_files, lambda file: file.datetime)
     lma_analysis_args = " ".join(args.lma_analysis_args)
     process_batches(
-        batches, lma_analysis_bin, lma_analysis_args, silent_mode, num_workers
+        batches, out_dir, lma_analysis_bin, lma_analysis_args, silent_mode, num_workers
     )
 
 
