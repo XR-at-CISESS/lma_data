@@ -3,9 +3,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional
 from lma_data.LMA_data_file import LMADataFile
 from lma_data.LMA_browser import LMABrowser
-from lma_data.LMA_cli import parse_date_string
+from lma_data.browser.file_browser import FileBrowser
+from lma_data.LMA_filters import LMAFilters
+from lma_data.LMA_util import batch
 from rich.progress import Progress
 from threading import Event, Lock
+from time import sleep
 
 lma_processes: list[subprocess.Popen[str]] = []
 lma_process_lock = Lock()
@@ -18,6 +21,10 @@ def process_batch(
     lma_analysis_args: str,
     silent_mode: bool,
 ):
+    sleep(3)
+    print("done")
+    return
+
     if len(batch) == 0:
         return
 
@@ -96,7 +103,7 @@ def process_batches(
             task = lma_progress.add_task("Processing LMA Data...")
             for _ in as_completed(futures):
                 done += 1
-                lma_progress.update(task, completed=float(done) / len(futures))
+                lma_progress.update(task, completed=(100 * float(done) / len(futures)))
 
 
 def create_parser():
@@ -104,10 +111,10 @@ def create_parser():
         prog="lma_batch",
         description="Quickly process multiple LMA files using lma_analysis",
     )
+
     parser.add_argument("data_dir")
-    parser.add_argument("-sd", "--start_date", dest="start_date")
-    parser.add_argument("-ed", "--end_date", dest="end_date")
     parser.add_argument(dest="lma_analysis_args", nargs=argparse.REMAINDER, default="")
+
     parser.add_argument("-n", "--num_workers", type=int, dest="num_workers")
     parser.add_argument("--silent", "-s", action="store_true", dest="silent_mode")
     parser.add_argument(
@@ -123,17 +130,30 @@ def create_parser():
 
 def main():
     parser = create_parser()
-    args = parser.parse_args()
-    browser = LMABrowser()
-    browser.find(args.data_dir)
 
-    start = parse_date_string(args.start_date)
-    end = parse_date_string(args.end_date)
+    date_filter = LMAFilters[LMADataFile].create_date_filter(
+        lambda _, file: file.datetime
+    )
+    network_filter = LMAFilters[LMADataFile].create_network_filter(
+        lambda _, file: file.network
+    )
+    station_filter = LMAFilters[LMADataFile].create_station_filter(
+        lambda _, file: file.station_identifier
+    )
+    filters = [date_filter, network_filter, station_filter]
+
+    LMAFilters.apply_filters_to_argparser(parser, *filters)
+    args = parser.parse_args()
+
+    browser = FileBrowser(LMADataFile.try_parse)
+    LMAFilters.add_filters_to_browser(browser, *filters)
+    data_files = browser.find(args.data_dir, **vars(args))
+
     num_workers = args.num_workers
     silent_mode = args.silent_mode
     lma_analysis_bin = args.lma_analysis_bin
 
-    batches = browser.batch(start, end)
+    batches = batch(data_files, lambda file: file.datetime)
     lma_analysis_args = " ".join(args.lma_analysis_args)
     process_batches(
         batches, lma_analysis_bin, lma_analysis_args, silent_mode, num_workers
