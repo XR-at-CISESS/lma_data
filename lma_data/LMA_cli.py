@@ -64,3 +64,18 @@ def add_filter_args(parser: argparse.ArgumentParser):
         dest="stations",
         help="A comma-separated filter for stations to include in the results",
     )
+
+
+VERBOSE = False
+
+
+def set_verbose(verbose: bool):
+    global VERBOSE
+    VERBOSE = verbose
+
+
+def vprint(*args, **kwargs):
+    if not VERBOSE:
+        return
+
+    print(*args, **kwargs)

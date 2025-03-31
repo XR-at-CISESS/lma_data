@@ -25,9 +25,8 @@ from lma_data.LMA_info import info
 from lma_data.LMA_util import get_lma_shapes_dir, get_lma_out_dir
 from lma_data.browser.file_browser import FileBrowser
 from lma_data.lmatools_file import LMAToolsFile
-from lma_data.browser.filters.date import DateFilter
-from lma_data.browser.filters.options import OptionsFilter
 from lma_data.LMA_filters import LMAFilters
+from lma_data.LMA_cli import vprint, set_verbose
 
 GeoAxes._pcolormesh_patched = Axes.pcolormesh
 
@@ -46,7 +45,7 @@ def draw_map(
     **kwargs,
 ):
 
-    print("\tGenerate Map...")
+    vprint("\tGenerate Map...")
     projection = ccrs.PlateCarree()
 
     states_provinces = cfeature.NaturalEarthFeature(
@@ -58,7 +57,7 @@ def draw_map(
 
     # --add features, such as lakes, river, borders, coastlines, etc.
     reader = shpreader.Reader(os.path.join(get_lma_shapes_dir(), "countyl010g.shp"))
-    print("\tCreated Reader...")
+    vprint("\tCreated Reader...")
 
     counties = list(reader.geometries())
     COUNTIES = cfeature.ShapelyFeature(counties, projection)
@@ -70,7 +69,7 @@ def draw_map(
     ax.add_feature(cfeature.OCEAN, color=plotrgba)
     ax.coastlines(resolution="10m", color=coastrgba)
 
-    print("\tAdded Features...")
+    vprint("\tAdded Features...")
 
     # -------------- Gather network specific variables  --------------
     lma_info = info(network)
@@ -79,14 +78,14 @@ def draw_map(
     lat_extents = lma_info[5]
     lon_extents = lma_info[6]
 
-    print("\tGot Info...")
+    vprint("\tGot Info...")
 
     extents = [*lon_extents, *lat_extents]
     ax.set_extent(extents, crs=projection)
-    print("\tSet Extent...")
+    vprint("\tSet Extent...")
     ax.set_aspect("auto")
 
-    print("\tSet Aspect...")
+    vprint("\tSet Aspect...")
 
     # ------------------- Plot LMA Stations -------------------
     ax.scatter(
@@ -100,7 +99,7 @@ def draw_map(
         zorder=10,
     )
 
-    print("\tDone Generate Map...")
+    vprint("\tDone Generate Map...")
 
     return ax
 
@@ -113,7 +112,7 @@ def round_time(dt, round_to=60):
 
 def get_data(file, lon_index=(0, 800), lat_index=(0, 800), alt_index=(0, 20)):
 
-    print("\tGet data from 3d.nc file...")
+    vprint("\tGet data from 3d.nc file...")
     # -------- Import Variables from Gridded NetCDF file ------------
     data = Dataset(file).variables
     lons = data["longitude"][:]
@@ -147,7 +146,7 @@ def get_data(file, lon_index=(0, 800), lat_index=(0, 800), alt_index=(0, 20)):
     # start_time = round_time(start_time, round_to=frame_interval)
     start_time = round_time(start_time, round_to=60 * 1)
 
-    print("\t\tCalculate summations...")
+    vprint("\t\tCalculate summations...")
     # ------------------- Sum TOTAL Source Count -------------------
     total = np.sum(grid_type)
 
@@ -200,7 +199,7 @@ def make_plot(
     theme="normal",
     image_type="png",
 ):
-
+    print(f"Generating plot for {file}...")
     lma_info = info(network)
     lat_0 = lma_info[0]
     lon_0 = lma_info[1]
@@ -279,7 +278,7 @@ def make_plot(
 
     # ==============================================================
     # ------------- Generate Figure with Subplot Specs -------------
-    print("\tCreate Figure...")
+    vprint("\tCreate Figure...")
 
     # -------- Calcualte Figure Size from Subplot Aspect Ratios --------
     FA = 0
@@ -677,7 +676,7 @@ def make_plot(
 
     # ===============================================================
     # ----------------------- Save file ------------------------------
-    print("\tSave Plot")
+    vprint("\tSave Plot")
     filepathway = file.split("/")
     filename = filepathway[-1].split(".")
     filename = "".join(filename[:-1])
@@ -706,8 +705,21 @@ def create_parser():
 
     parser.add_argument("data_dir")
     parser.add_argument("out_dir")
+    parser.add_argument("--verbose", action="store_true")
 
     return parser
+
+
+def create_cache_filter():
+    cache_browser = FileBrowser(LMAToolsFile.try_parse)
+    cache_filter = LMAFilters[LMAToolsFile].create_cache_filter_from_browser(
+        cache_browser,
+        lambda _, file: file.datetime,
+        lambda _, file: file.datetime,
+        lambda args: args["out_dir"],
+    )
+
+    return cache_filter
 
 
 def main():
@@ -718,15 +730,17 @@ def main():
     network_filter = LMAFilters[LMAToolsFile].create_network_filter(
         lambda _, file: file.prefix
     )
-    filters = [date_filter, network_filter]
+    cache_filter = create_cache_filter()
+
+    filters = [date_filter, network_filter, cache_filter]
     LMAFilters.apply_filters_to_argparser(parser, *filters)
-    args = parser.parse_args()
 
     # ---------- Assign Date Variables from User Input ----------
+    args = parser.parse_args()
     data_dir = args.data_dir
-
-    # --------------- Declair IO Directories --------------------
     outpath = args.out_dir
+    verbose = args.verbose
+    set_verbose(verbose)
 
     os.makedirs(outpath, exist_ok=True)
 
@@ -739,7 +753,7 @@ def main():
 
     # -----------------------------------------------------------
     # -------------- Generate and Save the Plots ----------------
-    print("Cycle through 3D gridded files.....")
+    vprint("Cycle through 3D gridded files.....")
 
     filepaths = browser.find(data_dir, **vars(args))
     for file in filepaths:

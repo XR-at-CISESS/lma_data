@@ -23,11 +23,15 @@ class FileBrowser(Generic[T]):
         self._filters.append(browser_filter)
 
     def ifind(self, root_dir: str, **kwargs) -> Iterator[T]:
+        for file, _ in self.ifind2(root_dir, **kwargs):
+            yield file
+
+    def ifind2(self, root_dir: str, **kwargs) -> Iterator[tuple[T, str]]:
         pathname = self._get_glob_pathname(root_dir)
         for path in glob.iglob(pathname, recursive=True):
             file = self._mapper(path)
             if file and self._test_file(path, file, **kwargs):
-                yield file
+                yield file, path
 
     def find(self, root_dir: str, **kwargs) -> list[T]:
         pathname = self._get_glob_pathname(root_dir)
