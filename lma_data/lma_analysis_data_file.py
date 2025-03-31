@@ -19,7 +19,8 @@ class LMAAnalysisDataFile:
             return None
 
         network, date, time, misc = lma_match.groups()
-        data_datetime = datetime.strptime(f"{date}T{time}", "%Y%m%dT%H%M%S")
+        # Prepend 20 for 20XX dates
+        data_datetime = datetime.strptime(f"20{date}T{time}", "%Y%m%dT%H%M%S")
         lma_data_file = LMAAnalysisDataFile(path, network, data_datetime)
 
         return lma_data_file

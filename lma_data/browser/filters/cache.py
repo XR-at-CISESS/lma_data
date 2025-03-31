@@ -29,7 +29,9 @@ class CacheFilter(BrowserFilter[T]):
             self._load_cache(args)
 
         key_val = self._get_file_cache_property(path, file)
-        return not key_val in self._cache
+        not_in_cache = not key_val in self._cache
+
+        return not_in_cache
 
     def apply_to_argparser(self, parser: argparse.ArgumentParser):
         parser.add_argument(f"--no-cache", action="store_true")

@@ -21,6 +21,7 @@ from lmatools.flashsort.gen_sklearn import DBSCANFlashSorter
 from lma_data.browser.file_browser import FileBrowser
 from lma_data.LMA_filters import LMAFilters
 from lma_data.lma_analysis_data_file import LMAAnalysisDataFile
+from lma_data.lmatools_file import LMAToolsFile
 from lma_data.browser.filters.non_empty import NonEmptyFileFilter
 from lma_data.LMA_util import batch
 
@@ -86,7 +87,7 @@ def sort_flashes(files, outdir, params):
 
         h5_outfiles = []
         for a_file in files:
-            print(a_file)
+            print(f"Processing {a_file}...")
             try:
                 # ---------- create filename with .flash extention ----------
                 file_base_name = os.path.split(a_file)[-1].replace(".gz", "")
@@ -207,6 +208,18 @@ def create_parser():
     return parser
 
 
+def create_cache_filter():
+    browser = FileBrowser(LMAToolsFile.try_parse)
+    cache_filter = LMAFilters[LMAAnalysisDataFile].create_cache_filter_from_browser(
+        browser,
+        lambda _, file: file.datetime,
+        lambda _, file: file.datetime,
+        lambda args: args["out_dir"],
+    )
+
+    return cache_filter
+
+
 def main():
     parser = create_parser()
     date_filter = LMAFilters[LMAAnalysisDataFile].create_date_filter(
@@ -216,7 +229,8 @@ def main():
         lambda _, file: file.network
     )
     non_empty_filter = NonEmptyFileFilter()
-    filters = [date_filter, network_filter, non_empty_filter]
+    cache_filter = create_cache_filter()
+    filters = [date_filter, network_filter, non_empty_filter, cache_filter]
     LMAFilters.apply_filters_to_argparser(parser, *filters)
     args = parser.parse_args()
 
@@ -227,11 +241,12 @@ def main():
     pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)
 
     browser = FileBrowser(LMAAnalysisDataFile.try_parse, "**/*.gz")
+    LMAFilters.add_filters_to_browser(browser, *filters)
     files = browser.find(data_dir, **vars(args))
-    batches = batch(files, lambda f: f.network)
+    network_batches = batch(files, lambda f: f.network)
 
-    for file_batch in batches:
-        network = file_batch[0].network
+    for network_batch in network_batches:
+        network = network_batch[0].network
         lma_info = info(network)
         params = {
             "stations": (6, 99),  # range of allowable numbers of contributing stations
@@ -250,8 +265,7 @@ def main():
 
         # -------------------------------------------------------
         # ----- Cluster Sources into Flashes (HDF5 files) -------
-        paths = list(map(lambda f: f.path, file_batch))
-        print(paths)
+        paths = list(map(lambda f: f.path, network_batch))
         h5_filenames = sort_flashes(paths, out_dir, params)
 
         # -------------------------------------------------------
